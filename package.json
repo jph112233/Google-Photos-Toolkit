@@ -1,7 +1,7 @@
 {
   "name": "google-photos-toolkit",
   "nameFull": "Google Photos Toolkit - Cleanup",
-  "version": "4.0.0-cleanup.3",
+  "version": "4.0.0-cleanup.4",
   "description": "Free Up Space wizard plus bulk organize tools for Google Photos",
   "userScript": {
     "namespace": "https://github.com/jph112233/Google-Photos-Cleanup",
