@@ -16,14 +16,14 @@ export default function saverStep(ctx: WizardCtx): HTMLElement {
   }
 
   if (!stats.count) {
-    body.appendChild(h('div', { class: 'wz-card' }, h('p', null, 'Good news: none of your photos are in Original quality, so there is nothing to gain here.')));
+    body.appendChild(h('div', { class: 'wz-card' }, h('p', null, 'Good news: your big photos and videos are already in Storage saver, so there is little to gain here.')));
   } else {
     body.appendChild(
       h(
         'div',
         { class: 'wz-card' },
-        rich('p', `**${formatCount(stats.count)}** of your photos and videos are saved in **Original quality** (${formatBytes(stats.bytes)}).`, 'wz-big-text'),
-        rich('p', `Switching them to **Storage saver** could free about **${formatBytesRange(stats.savingsLow, stats.savingsHigh)}**.`, 'wz-big-text'),
+        rich('p', `At least **${formatCount(stats.count)}** of your biggest photos and videos are saved in **Original quality** (${formatBytes(stats.bytes)}).`, 'wz-big-text'),
+        rich('p', `Switching to **Storage saver** could free at least **${formatBytesRange(stats.savingsLow, stats.savingsHigh)}**, likely more.`, 'wz-big-text'),
         rich('p', "They'll still look great on a phone, but you **can't undo** this. The originals are gone for good.", 'wz-warning'),
         h(
           'details',

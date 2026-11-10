@@ -167,7 +167,7 @@ export function previewGrid(opts: GridOptions): HTMLElement {
   const updateFooter = (): void => {
     const sel = selected();
     const t = totals(sel);
-    footer.update(`Selected: **${plural(t.count, opts.noun[0], opts.noun[1])}, ${formatBytes(t.bytes)}**  of ${plural(list.length, opts.noun[0], opts.noun[1])}`, t.count > 0);
+    footer.update(`Selected: **${plural(t.count, opts.noun[0], opts.noun[1])}, ${formatBytes(t.bytes)}**  of ${plural(list.length, opts.noun[0], opts.noun[1])}`, t.count > 0 && ctx.state.scan?.sharedChecked === true);
   };
 
   const renderMore = (): void => {

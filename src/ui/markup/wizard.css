@@ -1047,3 +1047,21 @@
     text-transform: none;
     letter-spacing: normal;
 }
+
+#gptk-wizard .wz-row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#gptk-wizard .wz-progress-indeterminate .wz-progress-fill {
+    width: 35%;
+    animation: wz-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes wz-slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+}

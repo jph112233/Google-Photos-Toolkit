@@ -8,11 +8,12 @@ import scanStep from './steps/scan';
 import saverStep from './steps/saver';
 import videosStep from './steps/videos';
 import screenshotsStep from './steps/screenshots';
+import blurryStep from './steps/blurry';
 import dupesStep from './steps/dupes';
 import { trashStep, doneStep } from './steps/trash';
-import Scanner, { ScanStoppedError } from '../../cleanup/scan';
+import Scanner, { ScanStoppedError, findSharedDedupKeys } from '../../cleanup/scan';
 import { pruneGroups } from '../../cleanup/duplicates';
-import { totals, withoutKeys } from '../../cleanup/categories';
+import { totals, withoutKeys, isEligible } from '../../cleanup/categories';
 import { formatBytes, plural } from '../../cleanup/format';
 import splitArrayIntoChunks from '../../utils/splitArrayIntoChunks';
 import getFromStorage from '../../utils/getFromStorage';
@@ -31,6 +32,7 @@ const RENDERERS: Record<StepId, (ctx: WizardCtx) => HTMLElement> = {
   saver: saverStep,
   videos: videosStep,
   screenshots: screenshotsStep,
+  blurry: blurryStep,
   dupes: dupesStep,
   trash: trashStep,
   done: doneStep,
@@ -142,8 +144,9 @@ class Wizard implements WizardCtx {
       state.scan = result;
       state.dupes = null;
       state.grid = {};
-      log(`Free Up Space: scan complete, ${result.items.length} owned items`, 'success');
+      log(`Free Up Space: quick scan complete, ${result.items.length} items to review`, 'success');
       saveSummary(state);
+      void this.checkShared();
     } catch (error) {
       if (error instanceof ScanStoppedError || !this.core.isProcessRunning) {
         state.error = 'Scan stopped. Nothing was changed. Scan again whenever you like.';
@@ -160,9 +163,51 @@ class Wizard implements WizardCtx {
     }
   }
 
+  async checkShared(): Promise<void> {
+    const { state } = this;
+    const scan = state.scan;
+    if (!scan || scan.sharedChecked || state.shared.checking) return;
+    state.shared = { checking: true, done: 0, total: 0, error: null };
+    this.render();
+    let lastRender = 0;
+    try {
+      const keys = await findSharedDedupKeys(this.core.api, (done, total) => {
+        state.shared.done = done;
+        state.shared.total = total;
+        if (Date.now() - lastRender > 500) {
+          lastRender = Date.now();
+          this.render();
+        }
+      });
+      if (state.scan !== scan) return; // A newer scan replaced this one.
+      scan.sharedDedupKeys = keys;
+      scan.sharedChecked = true;
+      // Look-alike groups found before this finished may hold shared photos.
+      if (state.dupes && !state.includeShared) {
+        const opts = this.eligibility();
+        const removed = new Set(state.dupes.groups.flatMap((g) => g.items).filter((i) => !isEligible(i, opts)).map((i) => i.mediaKey));
+        if (removed.size) {
+          state.dupes.groups = pruneGroups(state.dupes.groups, removed);
+          for (const key of removed) state.dupes.trashKeys.delete(key);
+        }
+      }
+      saveSummary(state);
+    } catch (error) {
+      state.shared.error = error instanceof Error ? error.message : String(error);
+    } finally {
+      state.shared.checking = false;
+      this.render();
+    }
+  }
+
   async trash(items: MediaItem[], noun: string): Promise<MediaItem[]> {
     const { state } = this;
     if (!items.length || !state.scan) return [];
+    if (!state.scan.sharedChecked) {
+      state.error = 'Still checking shared albums. Try again in a moment.';
+      this.render();
+      return [];
+    }
     if (this.core.isProcessRunning) {
       state.error = 'Another task is running. Wait for it to finish first.';
       this.render();

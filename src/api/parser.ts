@@ -23,6 +23,7 @@ import type {
   DownloadTokenCheck,
   StorageQuota,
   RemoteMatch,
+  StorageCategoryPage,
 } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -55,6 +56,31 @@ function libraryItemParse(itemData: any): MediaItem {
       coordinates: itemData?.at(-1)?.[129168200]?.[1]?.[0],
       name: itemData?.at(-1)?.[129168200]?.[1]?.[4]?.[0]?.[1]?.[0]?.[0],
     },
+  };
+}
+
+/**
+ * omQMf: Google's own "Manage storage" review lists (large, blurry,
+ * screenshots, other apps). Items use the library item shape, and the
+ * storage block (318563170) carries [takesUpSpace, bytes, quality].
+ */
+function storageCategoryItemParse(itemData: any): MediaItem {
+  const item = libraryItemParse(itemData);
+  const storage = itemData?.at(-1)?.[318563170]?.[0];
+  const bytes = storage?.[1];
+  return {
+    ...item,
+    takesUpSpace: storage?.[0] === undefined ? null : storage[0] === 1,
+    spaceTaken: bytes,
+    size: typeof bytes === 'number' ? bytes : undefined,
+    isOriginalQuality: storage?.[2] === undefined ? null : storage[2] === 2,
+  };
+}
+
+function storageCategoryPage(data: any): StorageCategoryPage {
+  return {
+    items: data?.[0]?.map((itemData: any) => storageCategoryItemParse(itemData)),
+    nextPageId: data?.[2] ?? undefined,
   };
 }
 
@@ -398,6 +424,7 @@ const parserRegistry: Record<string, (data: any) => ParserResult> = {
   'EWgK9e': bulkMediaInfo,
   'dnv2s': downloadTokenCheckParse,
   'EzwWhf': storageQuotaParse,
+  'omQMf': storageCategoryPage,
   'swbisb': remoteMatchesParse,
 };
 

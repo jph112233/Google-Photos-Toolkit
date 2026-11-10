@@ -19,12 +19,13 @@ function cards(summary: SavedSummary): ResultCard[] {
       step: 'saver',
       title: 'Storage saver',
       value: summary.saver.count ? `~${formatBytesRange(summary.saver.savingsLow, summary.saver.savingsHigh)}` : 'All set',
-      detail: summary.saver.count ? `${plural(summary.saver.count, 'item')} in Original quality` : 'Already using Storage saver',
+      detail: summary.saver.count ? `${plural(summary.saver.count, 'big item')} in Original quality` : 'Already using Storage saver',
       bytes: summary.saver.savingsHigh,
     },
     { step: 'videos', title: 'Big videos', value: formatBytes(summary.videos.bytes), detail: `${plural(summary.videos.count, 'video')} over 50 MB`, bytes: summary.videos.bytes },
     { step: 'screenshots', title: 'Screenshots and app saves', value: formatBytes(summary.screenshots.bytes), detail: plural(summary.screenshots.count, 'item'), bytes: summary.screenshots.bytes },
-    { step: 'dupes', title: 'Look-alike photos', value: 'Check', detail: `${plural(summary.dupeCandidates, 'photo')} taken close together`, bytes: 0 },
+    { step: 'blurry', title: 'Blurry photos', value: formatBytes(summary.blurry?.bytes ?? 0), detail: plural(summary.blurry?.count ?? 0, 'photo'), bytes: summary.blurry?.bytes ?? 0 },
+    { step: 'dupes', title: 'Look-alike photos', value: 'Check', detail: 'Bursts and repeat selfies', bytes: 0 },
     {
       step: 'trash',
       title: 'Trash',
@@ -41,10 +42,10 @@ function progressView(ctx: WizardCtx): HTMLElement {
   const pct = Math.round((p?.fraction ?? 0) * 100);
   const activeIndex = SCAN_PHASES.findIndex((ph) => ph.id === p?.phase);
   const detailParts: string[] = [];
-  if (p?.itemCount) detailParts.push(`${formatCount(p.itemCount)} photos and videos found`);
-  if (p?.phase === 'sizes' && p.total) detailParts.push(`sizes for ${formatCount(p.done)} of ${formatCount(p.total)}`);
-  if (p?.phase === 'shared' && p.total) detailParts.push(`${formatCount(p.done)} of ${formatCount(p.total)} shared albums checked`);
-  if (p?.etaMs !== undefined && p.phase !== 'library') detailParts.push(formatEta(p.etaMs));
+  if (p?.largeBytes) detailParts.push(`${formatBytes(p.largeBytes)} of big files found`);
+  if (p?.itemCount) detailParts.push(`${formatCount(p.itemCount)} items to review`);
+  if (p?.phase === 'details' && p.total) detailParts.push(`details for ${formatCount(p.done)} of ${formatCount(p.total)}`);
+  if (p?.etaMs !== undefined && p.phase !== 'large') detailParts.push(formatEta(p.etaMs));
 
   return h(
     'div',
@@ -98,7 +99,7 @@ export default function scanStep(ctx: WizardCtx): HTMLElement {
   const body = h('div', { class: 'wz-step' }, flash(ctx));
 
   if (state.scanning) {
-    body.appendChild(stepTitle('Scanning your library...', 'This only reads your library. **Nothing changes.** You can keep this tab open and wait.'));
+    body.appendChild(stepTitle('Finding your quick wins...', "Biggest files first. This only reads your library, **nothing changes**, and it's quick even for huge libraries."));
     body.appendChild(progressView(ctx));
     return body;
   }
@@ -109,7 +110,7 @@ export default function scanStep(ctx: WizardCtx): HTMLElement {
 
   const live = computeSummary(state);
   if (live) {
-    body.appendChild(stepTitle('Here is what we found', `Pick a card, or go step by step. ${plural(live.videos.count + live.screenshots.count, 'item')} are ready to review.`));
+    body.appendChild(stepTitle('Here is what we found', `Pick a card, or go step by step. ${plural(live.videos.count + live.screenshots.count + live.blurry.count, 'item')} are ready to review.`));
     body.appendChild(resultsView(ctx, live, false));
     return body;
   }
@@ -120,7 +121,7 @@ export default function scanStep(ctx: WizardCtx): HTMLElement {
     return body;
   }
 
-  body.appendChild(stepTitle("Let's find what's eating your storage", "This takes a few minutes and **doesn't change anything**."));
+  body.appendChild(stepTitle("Let's find what's eating your storage", "We start with the biggest wins. It takes about a minute and **doesn't change anything**."));
   body.appendChild(
     h(
       'div',
@@ -128,7 +129,7 @@ export default function scanStep(ctx: WizardCtx): HTMLElement {
       h(
         'ul',
         { class: 'wz-list' },
-        h('li', null, 'We look for big videos, screenshots, and look-alike photos.'),
+        h('li', null, 'We look for big videos, screenshots, blurry shots, and look-alike photos.'),
         h('li', null, 'You pick what goes. Nothing is deleted without you saying so.'),
         rich('li', 'Anything you remove sits in **Trash for 30 days**, so you can get it back.')
       ),

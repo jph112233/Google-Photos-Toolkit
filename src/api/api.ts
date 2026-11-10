@@ -19,6 +19,7 @@ import type {
   DownloadTokenCheck,
   StorageQuota,
   RemoteMatch,
+  StorageCategoryPage,
 } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -444,6 +445,28 @@ export default class Api {
       return response;
     } catch (error) {
       console.error('Error in removeFromLockedFolder:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * One page of a Google "Manage storage" review list (Large photos & videos,
+   * Blurry, Screenshots, Other apps). Large comes back roughly biggest first,
+   * with each item's storage bytes included.
+   */
+  async getStorageCategoryPage(
+    category: number,
+    pageId: string | null = null,
+    parseResponse = true
+  ): Promise<StorageCategoryPage> {
+    const rpcid = 'omQMf';
+    const requestData = pageId ? [null, null, category, null, null, pageId] : [null, null, category];
+    try {
+      const response = await this.makeApiRequest(rpcid, requestData);
+      if (parseResponse) return (parser(response, rpcid) as StorageCategoryPage | null) ?? { items: [] };
+      return response;
+    } catch (error) {
+      console.error('Error in getStorageCategoryPage:', error);
       throw error;
     }
   }

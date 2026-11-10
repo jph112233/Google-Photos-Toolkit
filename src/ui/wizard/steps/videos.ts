@@ -1,5 +1,5 @@
 import { h } from '../dom';
-import { stepTitle, nav, needsScan, flash, optionToggles } from './common';
+import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from './common';
 import { previewGrid } from '../preview-grid';
 import { bigVideos, isScreenRecording, isLongVideo, totals } from '../../../cleanup/categories';
 import { formatBytes, plural } from '../../../cleanup/format';
@@ -20,6 +20,7 @@ export default function videosStep(ctx: WizardCtx): HTMLElement {
     return body;
   }
   body.appendChild(optionToggles(ctx));
+  body.appendChild(sharedNotice(ctx));
   body.appendChild(
     previewGrid({
       ctx,

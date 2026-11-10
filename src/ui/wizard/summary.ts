@@ -1,5 +1,4 @@
-import { bigVideos, screenshots, originalQualityStats, duplicateCandidates, totals } from '../../cleanup/categories';
-import { bucketByTime } from '../../cleanup/duplicates';
+import { bigVideos, screenshots, blurryPhotos, originalQualityStats, totals } from '../../cleanup/categories';
 import saveToStorage from '../../utils/saveToStorage';
 import getFromStorage from '../../utils/getFromStorage';
 import type { WizardState, SavedSummary } from './state';
@@ -27,7 +26,6 @@ export function computeSummary(state: WizardState): SavedSummary | null {
   const scan = state.scan;
   if (!scan) return null;
   const opts = eligibilityFrom(state);
-  const candidates = duplicateCandidates(scan.items, opts);
   const { used, total } = usedBytes(state);
   return {
     scannedAt: scan.scannedAt,
@@ -35,8 +33,8 @@ export function computeSummary(state: WizardState): SavedSummary | null {
     totalBytes: total,
     saver: originalQualityStats(scan.items),
     videos: totals(bigVideos(scan.items, opts)),
-    screenshots: totals(screenshots(scan.items, scan.screenshotKeys, opts)),
-    dupeCandidates: bucketByTime(candidates).reduce((n, b) => n + b.length, 0),
+    screenshots: totals(screenshots(scan.items, scan.sources, opts)),
+    blurry: totals(blurryPhotos(scan.items, scan.sources.blurry, opts)),
     trash: { ...scan.trash },
     freedBytes: state.freedBytes,
   };

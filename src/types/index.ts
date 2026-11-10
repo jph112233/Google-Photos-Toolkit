@@ -207,6 +207,19 @@ export interface DownloadTokenCheck {
   unzippedSize?: number;
 }
 
+/** Google "Manage storage" review lists (rpc omQMf). */
+export enum StorageCategory {
+  Large = 1,
+  Blurry = 2,
+  OtherApps = 4,
+  Screenshots = 5,
+}
+
+export interface StorageCategoryPage {
+  items?: MediaItem[];
+  nextPageId?: string;
+}
+
 export interface StorageQuota {
   totalUsed?: number;
   totalAvailable?: number;

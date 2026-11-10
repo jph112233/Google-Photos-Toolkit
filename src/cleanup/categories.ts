@@ -85,30 +85,48 @@ export const WHATSAPP_RE = /IMG-\d{8}-WA\d+|VID-\d{8}-WA\d+/i;
 export const SCREENSHOT_EXT_RE = /\.png$/i;
 export const OTHER_APPS_RE = /^received_|FB_IMG_|Instagram|TikTok|^\d{19}\.mp4$/i;
 
+/** Where screenshot/app candidates come from (sets of mediaKeys). */
+export interface ScreenshotSources {
+  /** Google's own "Screenshots" review list. */
+  googleScreenshots?: Set<string>;
+  /** Google's own "Other apps" review list. */
+  otherApps?: Set<string>;
+  /** Google Photos search for "screenshots" (noisy: only PNGs are trusted). */
+  search?: Set<string>;
+}
+
 /** Which screenshot/app bucket an item falls in, or null if none. */
-export function screenshotKind(item: MediaItem, screenshotKeys?: Set<string>): ScreenshotKind | null {
+export function screenshotKind(item: MediaItem, sources: ScreenshotSources = {}): ScreenshotKind | null {
   const name = item.fileName ?? '';
   if (SNAPCHAT_RE.test(name)) return 'snapchat';
   if (WHATSAPP_RE.test(name)) return 'whatsapp';
   if (OTHER_APPS_RE.test(name)) return 'otherApps';
   if (SCREENSHOT_RE.test(name)) return 'screenshot';
+  if (sources.otherApps?.has(item.mediaKey)) return 'otherApps';
+  if (sources.googleScreenshots?.has(item.mediaKey)) return 'screenshot';
   // Google's "screenshots" search also returns ordinary camera photos, so a
   // search hit only counts when the file is a PNG (how phones save screenshots).
-  if (screenshotKeys?.has(item.mediaKey) && SCREENSHOT_EXT_RE.test(name)) return 'screenshot';
+  if (sources.search?.has(item.mediaKey) && SCREENSHOT_EXT_RE.test(name)) return 'screenshot';
   return null;
 }
 
-export function screenshots(items: MediaItem[], screenshotKeys: Set<string>, opts: EligibilityOptions = {}): MediaItem[] {
+export function screenshots(items: MediaItem[], sources: ScreenshotSources, opts: EligibilityOptions = {}): MediaItem[] {
   const seen = new Set<string>();
   const result: MediaItem[] = [];
   for (const item of items) {
     if (seen.has(item.mediaKey)) continue;
     if (!isEligible(item, opts)) continue;
-    if (screenshotKind(item, screenshotKeys) === null) continue;
+    if (screenshotKind(item, sources) === null) continue;
     seen.add(item.mediaKey);
     result.push(item);
   }
   return sortBySizeDesc(result);
+}
+
+// ─── Blurry photos (Google's own list) ──────────────────────────────
+
+export function blurryPhotos(items: MediaItem[], blurryKeys: Set<string>, opts: EligibilityOptions = {}): MediaItem[] {
+  return sortBySizeDesc(items.filter((item) => blurryKeys.has(item.mediaKey) && !isVideo(item) && isEligible(item, opts)));
 }
 
 // ─── Step 1: Storage saver (info only) ──────────────────────────────

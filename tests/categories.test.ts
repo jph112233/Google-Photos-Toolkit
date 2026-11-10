@@ -7,6 +7,7 @@ import {
   isLongVideo,
   screenshotKind,
   screenshots,
+  blurryPhotos,
   originalQualityStats,
   duplicateCandidates,
   totals,
@@ -97,14 +98,41 @@ describe('screenshotKind', () => {
   }
   it('uses the Google search result keys as a fallback for PNG files', () => {
     const item = makeItem({ fileName: 'IMG_9999.PNG', mediaKey: 'from-search' });
-    expect(screenshotKind(item, new Set(['from-search']))).toBe('screenshot');
+    expect(screenshotKind(item, { search: new Set(['from-search']) })).toBe('screenshot');
   });
   it('ignores search hits that are camera photos or videos', () => {
-    const keys = new Set(['heic', 'jpg', 'vid', 'noname']);
+    const keys = { search: new Set(['heic', 'jpg', 'vid', 'noname']) };
     expect(screenshotKind(makeItem({ fileName: 'IMG_1.HEIC', mediaKey: 'heic' }), keys)).toBeNull();
     expect(screenshotKind(makeItem({ fileName: 'IMG_2.JPG', mediaKey: 'jpg' }), keys)).toBeNull();
     expect(screenshotKind(makeItem({ fileName: 'IMG_3.MOV', mediaKey: 'vid' }), keys)).toBeNull();
     expect(screenshotKind(makeItem({ mediaKey: 'noname' }), keys)).toBeNull();
+  });
+});
+
+describe('screenshotKind with Google lists', () => {
+  it("trusts Google's own Screenshots and Other apps lists for any file type", () => {
+    const sources = { googleScreenshots: new Set(['g']), otherApps: new Set(['o']) };
+    expect(screenshotKind(makeItem({ fileName: 'IMG_1.JPG', mediaKey: 'g' }), sources)).toBe('screenshot');
+    expect(screenshotKind(makeItem({ fileName: 'IMG_2.JPG', mediaKey: 'o' }), sources)).toBe('otherApps');
+  });
+  it('filename patterns win over list membership for the chip', () => {
+    const sources = { googleScreenshots: new Set(['w']) };
+    expect(screenshotKind(makeItem({ fileName: 'IMG-20240101-WA0001.jpg', mediaKey: 'w' }), sources)).toBe('whatsapp');
+  });
+});
+
+describe('blurryPhotos', () => {
+  it("keeps eligible images on Google's blurry list, never videos, largest first", () => {
+    const blurry = new Set(['b1', 'b2', 'vid', 'fav', 'notmine']);
+    const items = [
+      makeItem({ ...owned, mediaKey: 'b1', size: 1 * MB }),
+      makeItem({ ...owned, mediaKey: 'b2', size: 3 * MB }),
+      makeItem({ ...owned, mediaKey: 'vid', size: 9 * MB, duration: 4000 }),
+      makeItem({ ...owned, mediaKey: 'fav', size: 9 * MB, isFavorite: true }),
+      makeItem({ ...owned, mediaKey: 'notmine', size: 9 * MB, isOwned: false }),
+      makeItem({ ...owned, mediaKey: 'sharp', size: 9 * MB }),
+    ];
+    expect(blurryPhotos(items, blurry).map((i) => i.mediaKey)).toEqual(['b2', 'b1']);
   });
 });
 
@@ -115,7 +143,7 @@ describe('screenshots', () => {
     const c = makeItem({ ...owned, fileName: 'Snapchat-1.jpg', size: 2 * MB, mediaKey: 'c', isOwned: false });
     const d = makeItem({ ...owned, fileName: 'IMG_2.png', size: 5 * MB, mediaKey: 'd' });
     const e = makeItem({ ...owned, fileName: 'IMG_3.JPG', size: 9 * MB, mediaKey: 'e' });
-    const result = screenshots([a, b, c, d, e, a], new Set(['b', 'e']));
+    const result = screenshots([a, b, c, d, e, a], { search: new Set(['b', 'e']) });
     expect(result.map((i) => i.mediaKey)).toEqual(['b', 'a']);
   });
 });

@@ -46,3 +46,20 @@ export function optionToggles(ctx: WizardCtx): HTMLElement {
     toggle('Include photos in shared albums', ctx.state.includeShared, (v) => { ctx.state.includeShared = v; ctx.render(); })
   );
 }
+
+/** While the background shared-album check runs, Move to Trash stays locked. */
+export function sharedNotice(ctx: WizardCtx): HTMLElement {
+  const scan = ctx.state.scan;
+  const shared = ctx.state.shared;
+  if (!scan || scan.sharedChecked) return h('span');
+  if (shared.error) {
+    return h(
+      'div',
+      { class: 'wz-note wz-note-error' },
+      `Couldn't check which photos are in shared albums (${shared.error}). Move to Trash stays locked so nothing shared is removed. `,
+      h('button', { class: 'wz-link', onclick: () => void ctx.checkShared() }, 'Try again')
+    );
+  }
+  const progress = shared.total ? ` (${shared.done} of ${shared.total})` : '';
+  return h('div', { class: 'wz-note' }, `Checking which photos are in shared albums${progress}. You can look around, Move to Trash unlocks in a moment.`);
+}

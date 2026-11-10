@@ -1,5 +1,5 @@
 import { h } from '../dom';
-import { stepTitle, nav, needsScan, flash, optionToggles } from './common';
+import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from './common';
 import { previewGrid } from '../preview-grid';
 import { screenshots, screenshotKind, SCREENSHOT_KINDS, totals } from '../../../cleanup/categories';
 import { formatBytes, plural } from '../../../cleanup/format';
@@ -7,7 +7,7 @@ import type { WizardCtx } from '../state';
 
 export default function screenshotsStep(ctx: WizardCtx): HTMLElement {
   const scan = ctx.state.scan;
-  const items = scan ? screenshots(scan.items, scan.screenshotKeys, ctx.eligibility()) : [];
+  const items = scan ? screenshots(scan.items, scan.sources, ctx.eligibility()) : [];
   const t = totals(items);
   const body = h(
     'div',
@@ -24,8 +24,9 @@ export default function screenshotsStep(ctx: WizardCtx): HTMLElement {
     body.appendChild(needsScan(ctx, 'videos'));
     return body;
   }
-  const keys = scan.screenshotKeys;
+  const sources = scan.sources;
   body.appendChild(optionToggles(ctx));
+  body.appendChild(sharedNotice(ctx));
   body.appendChild(
     previewGrid({
       ctx,
@@ -34,10 +35,10 @@ export default function screenshotsStep(ctx: WizardCtx): HTMLElement {
       noun: ['item', 'items'],
       chipMode: 'any',
       defaultChips: SCREENSHOT_KINDS.map((k) => k.id),
-      chips: SCREENSHOT_KINDS.map((k) => ({ id: k.id, label: k.label, match: (item) => screenshotKind(item, keys) === k.id })),
+      chips: SCREENSHOT_KINDS.map((k) => ({ id: k.id, label: k.label, match: (item) => screenshotKind(item, sources) === k.id })),
       emptyText: 'No screenshots or app saves found.',
     })
   );
-  body.appendChild(nav(ctx, { back: 'videos', next: 'dupes', nextLabel: 'Next: Look-alikes' }));
+  body.appendChild(nav(ctx, { back: 'videos', next: 'dupes', nextLabel: 'Next: Blurry photos' }));
   return body;
 }

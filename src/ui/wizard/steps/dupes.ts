@@ -1,39 +1,50 @@
 import { h, clear } from '../dom';
-import { stepTitle, nav, needsScan, flash, optionToggles } from './common';
+import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from './common';
 import { createTile, setTileMode, selectionFooter } from '../preview-grid';
-import { duplicateCandidates, totals } from '../../../cleanup/categories';
-import { bucketByTime, defaultTrashKeys, findDuplicateGroups } from '../../../cleanup/duplicates';
+import { totals } from '../../../cleanup/categories';
+import { defaultTrashKeys, newCursor, streamDuplicateGroups } from '../../../cleanup/duplicates';
 import { formatBytes, formatCount, plural } from '../../../cleanup/format';
 import type { WizardCtx } from '../state';
 import type { MediaItem } from '../../../types';
 
 const GROUPS_PER_PAGE = 25;
 
+function monthYear(ts: number | null): string {
+  return ts ? new Date(ts).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : 'today';
+}
+
+/** Start, or keep going from where the last pass stopped. */
 async function runAnalysis(ctx: WizardCtx): Promise<void> {
   const { state, core } = ctx;
-  const scan = state.scan;
-  if (!scan || state.dupeRunning || core.isProcessRunning) return;
+  if (!state.scan || state.dupeRunning || core.isProcessRunning) return;
+  state.dupes ??= { groups: [], trashKeys: new Set(), cursor: newCursor() };
+  const dupes = state.dupes;
+  if (dupes.cursor.done) return;
   state.dupeRunning = true;
   state.error = null;
-  state.dupeProgress = { done: 0, total: 0, groups: 0 };
+  state.dupeProgress = { cursor: dupes.cursor, groups: 0 };
   core.isProcessRunning = true;
   ctx.render();
   let lastRender = 0;
   try {
-    const groups = await findDuplicateGroups(core, duplicateCandidates(scan.items, ctx.eligibility()), (p) => {
-      state.dupeProgress = p;
-      const now = Date.now();
-      if (now - lastRender > 300) {
-        lastRender = now;
-        ctx.render();
-      }
+    dupes.cursor = await streamDuplicateGroups(core, {
+      eligibility: ctx.eligibility(),
+      cursor: dupes.cursor,
+      onGroups: (groups) => {
+        dupes.groups.push(...groups);
+        for (const key of defaultTrashKeys(groups)) dupes.trashKeys.add(key);
+      },
+      onProgress: (p) => {
+        state.dupeProgress = p;
+        dupes.cursor = p.cursor;
+        if (Date.now() - lastRender > 400) {
+          lastRender = Date.now();
+          ctx.render();
+        }
+      },
     });
-    if (core.isProcessRunning) {
-      groups.sort((a, b) => totals(b.items).bytes - totals(a.items).bytes);
-      state.dupes = { groups, trashKeys: defaultTrashKeys(groups) };
-    }
   } catch (error) {
-    state.error = `Finding look-alikes failed: ${error instanceof Error ? error.message : String(error)}`;
+    state.error = `Finding look-alikes hit a problem: ${error instanceof Error ? error.message : String(error)}. Your progress is saved, press Keep looking to continue.`;
   } finally {
     core.isProcessRunning = false;
     state.dupeRunning = false;
@@ -57,7 +68,7 @@ function groupsView(ctx: WizardCtx): HTMLElement {
   const updateFooter = (): void => {
     const sel = selectedItems();
     const groupCount = groups.filter((g) => g.items.some((i) => trashKeys.has(i.mediaKey))).length;
-    footer.update(`Selected: **${plural(sel.length, 'photo')} in ${plural(groupCount, 'group')}, ${formatBytes(totals(sel).bytes)}**`, sel.length > 0);
+    footer.update(`Selected: **${plural(sel.length, 'photo')} in ${plural(groupCount, 'group')}, ${formatBytes(totals(sel).bytes)}**`, sel.length > 0 && ctx.state.scan?.sharedChecked === true);
   };
 
   const list = h('div', { class: 'wz-groups' });
@@ -149,20 +160,26 @@ export default function dupesStep(ctx: WizardCtx): HTMLElement {
   const body = h('div', { class: 'wz-step' }, flash(ctx), stepTitle('Look-alike photos', 'Bursts and selfies that look almost the same. We keep the **best shot** in each group.'));
   const scan = state.scan;
   if (!scan) {
-    body.appendChild(needsScan(ctx, 'screenshots'));
+    body.appendChild(needsScan(ctx, 'blurry'));
     return body;
   }
+  const dupes = state.dupes;
 
   if (state.dupeRunning) {
-    const p = state.dupeProgress;
-    const pct = p?.total ? Math.round((p.done / p.total) * 100) : 0;
+    const c = state.dupeProgress?.cursor ?? dupes?.cursor;
+    const found = dupes?.groups.length ?? 0;
     body.appendChild(
       h(
         'div',
         { class: 'wz-card' },
-        h('div', { class: 'wz-progress wz-progress-lg' }, h('div', { class: 'wz-progress-fill', style: `width:${pct}%` })),
-        h('p', { class: 'wz-progress-text' }, `${pct}%  Compared ${formatCount(p?.done ?? 0)} of ${formatCount(p?.total ?? 0)} photos  •  ${plural(p?.groups ?? 0, 'group')} found`),
-        h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-ghost', onclick: () => ctx.stop() }, 'Stop'))
+        h('div', { class: 'wz-progress wz-progress-lg wz-progress-indeterminate' }, h('div', { class: 'wz-progress-fill' })),
+        h(
+          'p',
+          { class: 'wz-progress-text' },
+          `Checked back to ${monthYear(c?.checkedBackTo ?? null)}  \u2022  ${formatCount(c?.itemsSeen ?? 0)} photos looked at  \u2022  ${plural(found, 'group')} found`
+        ),
+        h('p', { class: 'wz-muted' }, 'Newest photos first. You can stop any time and review what we found so far, then keep looking later.'),
+        h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-primary', onclick: () => ctx.stop() }, found ? `Stop and review ${plural(found, 'group')}` : 'Stop'))
       )
     );
     return body;
@@ -170,21 +187,29 @@ export default function dupesStep(ctx: WizardCtx): HTMLElement {
 
   if (state.error) body.appendChild(h('div', { class: 'wz-note wz-note-error' }, state.error));
 
-  if (!state.dupes) {
-    const candidates = bucketByTime(duplicateCandidates(scan.items, ctx.eligibility())).reduce((n, b) => n + b.length, 0);
+  if (!dupes) {
     body.appendChild(optionToggles(ctx));
     body.appendChild(
       h(
         'div',
         { class: 'wz-card wz-center' },
-        h('p', null, `We'll compare ${plural(candidates, 'photo')} that were taken within 10 minutes of another photo. Nothing changes until you choose.`),
-        h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-primary wz-btn-lg', disabled: candidates === 0, onclick: () => void runAnalysis(ctx) }, 'Find look-alikes'))
+        h('p', null, "We'll go through your photos newest first and compare the ones taken within 10 minutes of each other. Groups show up as we find them, and you can stop any time. Nothing changes until you choose."),
+        h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-primary wz-btn-lg', onclick: () => void runAnalysis(ctx) }, 'Find look-alikes'))
       )
     );
   } else {
-    body.appendChild(h('div', { class: 'wz-row-end' }, h('button', { class: 'wz-link', onclick: () => { state.dupes = null; void runAnalysis(ctx); } }, 'Check again')));
+    const c = dupes.cursor;
+    body.appendChild(sharedNotice(ctx));
+    body.appendChild(
+      h(
+        'div',
+        { class: 'wz-note wz-row-between' },
+        h('span', null, c.done ? `Checked your whole library (${formatCount(c.itemsSeen)} photos).` : `Checked back to ${monthYear(c.checkedBackTo)} (${formatCount(c.itemsSeen)} photos so far).`),
+        c.done ? null : h('button', { class: 'wz-btn wz-btn-small', onclick: () => void runAnalysis(ctx) }, 'Keep looking')
+      )
+    );
     body.appendChild(groupsView(ctx));
   }
-  body.appendChild(nav(ctx, { back: 'screenshots', next: 'trash', nextLabel: 'Next: Trash' }));
+  body.appendChild(nav(ctx, { back: 'blurry', next: 'trash', nextLabel: 'Next: Trash' }));
   return body;
 }
