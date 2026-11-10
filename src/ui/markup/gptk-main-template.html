@@ -4,12 +4,9 @@
   <!-- ── HEADER ─────────────────────────────────── -->
   <div class="header">
     <div class="header-info">
-      <div class="header-icon">
-        <svg width="18" height="18" viewBox="0 0 17 17" fill="currentColor">
-          <path d="M6.838,11.784 L12.744,5.879 C13.916,6.484 15.311,6.372 16.207,5.477 C16.897,4.786 17.131,3.795 16.923,2.839 L15.401,4.358 L14.045,4.624 L12.404,2.999 L12.686,1.603 L14.195,0.113 C13.24,-0.095 12.248,0.136 11.557,0.827 C10.661,1.723 10.549,3.117 11.155,4.291 L5.249,10.197 C4.076,9.592 2.681,9.705 1.784,10.599 C1.096,11.29 0.862,12.281 1.069,13.236 L2.592,11.717 L3.947,11.452 L5.59,13.077 L5.306,14.473 L3.797,15.963 C4.752,16.17 5.744,15.94 6.434,15.249 C7.33,14.354 7.443,12.958 6.838,11.784 Z"></path>
-        </svg>
-      </div>
-      <div class="header-text">GPTK</div>
+      <img class="brand-logo brand-logo-light" src="%logoLight%" width="200" height="37" alt="Prospera">
+      <img class="brand-logo brand-logo-dark" src="%logoDark%" width="200" height="37" alt="Prospera">
+      <div id="gptk-title" class="header-text">Free Up Space</div>
     </div>
     <div class="header-steps">
       <span class="step-badge">1</span> Source
@@ -18,8 +15,11 @@
       <span class="step-arrow">&rarr;</span>
       <span class="step-badge">3</span> Action
     </div>
+    <div class="header-actions">
+      <button type="button" id="gptk-view-toggle" class="view-toggle">Advanced</button>
     <div id="hide" title="Hide">
       <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 -960 960 960" width="18"><path d="M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z"/></svg>
+    </div>
     </div>
   </div>
 
@@ -268,7 +268,7 @@
       </form>
 
       <form class="settings-form">
-        <details class="settings"><summary>Advanced Settings</summary><fieldset>
+        <details class="settings"><summary>API Tuning</summary><fieldset>
           <legend>Max Concurrent Per-Item Requests</legend><div class="input-wrapper"><input name="maxConcurrentSingleApiReq" value="30" min="1" type="number" required></div>
           <legend>Max Concurrent Bulk Requests</legend><div class="input-wrapper"><input name="maxConcurrentBatchApiReq" value="3" min="1" type="number" required></div>
           <legend>API Operation Batch Size</legend><div class="input-wrapper"><input name="operationSize" value="250" max="500" min="1" type="number" required></div>
@@ -335,9 +335,12 @@
 
   <!-- ── FOOTER ─────────────────────────────────── -->
   <div class="footer">
-    <div class="info-container"><a class="homepage-link" href="%homepage%" target="_blank">%version%</a></div>
-    <div class="auto-scroll-container">
-      <label for="autoScroll"><input type="checkbox" id="autoScroll" checked="checked"><span>Auto-scroll</span></label>
+    <div class="brand-footer">Powered by Prospera  &bull;  <a href="https://www.prosperahq.io" target="_blank" rel="noopener">www.Prosperahq.io</a></div>
+    <div class="footer-right">
+      <div class="auto-scroll-container">
+        <label for="autoScroll"><input type="checkbox" id="autoScroll" checked="checked"><span>Auto-scroll</span></label>
+      </div>
+      <div class="info-container"><a class="homepage-link" href="%homepage%" target="_blank">%version%</a></div>
     </div>
   </div>
 </div>

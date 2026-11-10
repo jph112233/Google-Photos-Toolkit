@@ -238,7 +238,7 @@ async function processBatch<T, R>(
 }
 
 // This being a userscript prevents it from using web workers.
-async function generateImageHash(hashSize: number, blob: Blob, core: Core): Promise<bigint | null> {
+export async function generateImageHash(hashSize: number, blob: Blob, core: Core): Promise<bigint | null> {
   if (!blob) return null;
   if (!core.isProcessRunning) return null;
 
@@ -350,7 +350,7 @@ async function groupSimilarImages(
   return groups.filter((group) => group.length > 1);
 }
 
-async function fetchImageBlobs(
+export async function fetchImageBlobs(
   mediaItems: MediaItem[],
   maxConcurrency: number,
   imageHeight: number,

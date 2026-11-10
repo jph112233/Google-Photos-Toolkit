@@ -1,15 +1,14 @@
 {
   "name": "google-photos-toolkit",
-  "nameFull": "Google Photos Toolkit",
-  "version": "3.3.0",
-  "description": "Bulk organize your media",
+  "nameFull": "Google Photos Toolkit - Cleanup",
+  "version": "4.0.0-cleanup.1",
+  "description": "Free Up Space wizard plus bulk organize tools for Google Photos",
   "userScript": {
-    "namespace": "https://github.com/xob0t/Google-Photos-Toolkit",
+    "namespace": "https://github.com/jph112233/Google-Photos-Cleanup",
     "match": [
       "*://photos.google.com/*"
     ],
-    "icon": "https://raw.githubusercontent.com/xob0t/Google-Photos-Toolkit/main/media/icon.png",
-    "downloadURL": "https://github.com/xob0t/Google-Photos-Toolkit/releases/latest/download/google_photos_toolkit.user.js",
+    "icon": "media/brand/prospera-mark.png",
     "run-at": "body",
     "grant": [
       "GM_registerMenuCommand",
@@ -29,12 +28,12 @@
     "test:watch": "vitest"
   },
   "keywords": [],
-  "author": "xob0t",
+  "author": "xob0t (original), Prospera (cleanup wizard)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/xob0t/Google-Photos-Toolkit/discussions"
+    "url": "https://github.com/jph112233/Google-Photos-Cleanup/issues"
   },
-  "homepage": "https://github.com/xob0t/Google-Photos-Toolkit#readme",
+  "homepage": "https://github.com/jph112233/Google-Photos-Cleanup#readme",
   "devDependencies": {
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-typescript": "^12.3.0",

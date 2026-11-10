@@ -1,13 +1,39 @@
 import gptkMainTemplate from '../markup/gptk-main-template.html';
 import buttonHtml from '../markup/gptk-button.html';
+import wizardTemplate from '../markup/wizard-template.html';
 import css from '../markup/style.css';
+import wizardCss from '../markup/wizard.css';
+import logoLight from '../../../media/brand/prospera-logo-light.png';
+import logoDark from '../../../media/brand/prospera-logo-dark.png';
+import prosperaMark from '../../../media/brand/prospera-mark.png';
 import { updateUI } from './update-state';
 
 const version = `v${__VERSION__}`;
 const homepage = __HOMEPAGE__;
 
+const FONT_URL = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap';
+
 function htmlTemplatePrep(template: string): string {
-  return template.replace('%version%', version).replace('%homepage%', homepage);
+  return template
+    .replaceAll('%version%', version)
+    .replaceAll('%homepage%', homepage)
+    .replaceAll('%logoLight%', logoLight)
+    .replaceAll('%logoDark%', logoDark)
+    .replaceAll('%mark%', prosperaMark);
+}
+
+/** Montserrat for #gptk only. If CSP blocks it, the CSS falls back to the system stack. */
+function loadBrandFont(): void {
+  if (document.getElementById('gptk-font')) return;
+  try {
+    const link = document.createElement('link');
+    link.id = 'gptk-font';
+    link.rel = 'stylesheet';
+    link.href = FONT_URL;
+    document.head.appendChild(link);
+  } catch (error) {
+    console.warn('[GPTK] Could not load Montserrat, using system fonts', error);
+  }
 }
 
 export function insertUi(): void {
@@ -22,9 +48,11 @@ export function insertUi(): void {
   if (window.location.href.includes('lockedfolder')) buttonInsertLocation = '.c9yG5b';
   document.querySelector(buttonInsertLocation)?.insertAdjacentHTML('afterbegin', htmlTemplatePrep(buttonHtml));
   document.body.insertAdjacentHTML('afterbegin', htmlTemplatePrep(gptkMainTemplate));
+  document.querySelector('#gptk > .header')?.insertAdjacentHTML('afterend', htmlTemplatePrep(wizardTemplate));
   const style = document.createElement('style');
-  style.textContent = css;
+  style.textContent = `${css}\n${wizardCss}`;
   document.head.appendChild(style);
+  loadBrandFont();
 
   baseListenersSetUp();
 }

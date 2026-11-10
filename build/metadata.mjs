@@ -1,4 +1,6 @@
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { fileToDataUri } from './datauri-plugin.mjs';
 const loadJSON = (path) => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
 
 
@@ -38,6 +40,12 @@ export default function userScriptMetadataBlock() {
     license: pkg.license,
     ...pkg.userScript,
   };
+
+  // A local icon path (e.g. media/brand/prospera-mark.png) is inlined, so the
+  // icon works without fetching from a (private) repo.
+  if (typeof metadata.icon === 'string' && !/^(https?:|data:)/.test(metadata.icon)) {
+    metadata.icon = fileToDataUri(fileURLToPath(new URL(`../${metadata.icon}`, import.meta.url)));
+  }
 
   return generateComment(metadata);
 }

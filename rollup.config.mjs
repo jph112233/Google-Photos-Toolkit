@@ -4,6 +4,7 @@ import replace from '@rollup/plugin-replace';
 import typescript from '@rollup/plugin-typescript';
 
 import { string } from './build/strings-plugin.mjs';
+import { dataUri } from './build/datauri-plugin.mjs';
 import userScriptMetadataBlock from './build/metadata.mjs';
 const loadJSON = (path) => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
 let packageJson = loadJSON('./package.json');
@@ -20,6 +21,11 @@ const config = [
       },
     ],
     plugins: [
+      // Inline PNG brand assets as base64 data URIs
+      dataUri({
+        include: ['**/*.png'],
+      }),
+
       // Import HTML as string (must come before TypeScript plugin)
       string({
         include: ['**/*.html'],

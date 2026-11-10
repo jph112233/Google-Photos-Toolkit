@@ -1,9 +1,18 @@
 :root {
 
-    --accent: #3b82f6;
-    --accent-hover: #60a5fa;
-    --accent-muted: rgba(59, 130, 246, 0.15);
-    --accent-glow: rgba(59, 130, 246, 0.25);
+    --p-dark: #09122B;
+    --p-navy: #1D2B52;
+    --p-green: #14B87C;
+    --p-green-2: #6CC852;
+    --p-gradient: linear-gradient(135deg, #14B87C, #D4DC1E);
+    --p-faded: #B1B2C9;
+    --p-danger: #D93025;
+    --p-font: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+
+    --accent: #14B87C;
+    --accent-hover: #6CC852;
+    --accent-muted: rgba(20, 184, 124, 0.15);
+    --accent-glow: rgba(20, 184, 124, 0.25);
 
 
     --bg-base: #0c0c0e;
@@ -112,7 +121,7 @@
     max-width: 1280px;
     min-width: 300px;
     z-index: 500;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+    font-family: var(--p-font);
     font-size: 13px;
     line-height: 1.4;
     padding: 0;
@@ -263,7 +272,7 @@
     }
 
     option.shared {
-        background-color: rgba(59, 130, 246, 0.1);
+        background-color: rgba(20, 184, 124, 0.1);
     }
 
     option:checked {
@@ -307,7 +316,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+        background: linear-gradient(135deg, rgba(20, 184, 124, 0.08) 0%, transparent 50%);
         border-bottom: 1px solid var(--border-subtle);
         gap: 12px;
         flex-shrink: 0;
@@ -453,7 +462,7 @@
             background-color: var(--accent);
             fill: #fff;
             color: #fff;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35),
+            box-shadow: 0 2px 8px rgba(20, 184, 124, 0.35),
                         inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
     }
