@@ -61,5 +61,5 @@ export function sharedNotice(ctx: WizardCtx): HTMLElement {
     );
   }
   const progress = shared.total ? ` (${shared.done} of ${shared.total})` : '';
-  return h('div', { class: 'wz-note' }, `Checking which photos are in shared albums${progress}. You can look around, Move to Trash unlocks in a moment.`);
+  return h('div', { class: 'wz-note' }, `Checking which photos are in shared albums${progress}. Shared photos are left out, so totals may drop a little. You can look around; Move to Trash unlocks in a moment.`);
 }

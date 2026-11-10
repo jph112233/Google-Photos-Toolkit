@@ -1,5 +1,5 @@
 import { h, rich } from '../dom';
-import { stepTitle, flash } from './common';
+import { stepTitle, flash, sharedNotice } from './common';
 import { SCAN_PHASES } from '../../../cleanup/scan';
 import { formatBytes, formatBytesRange, formatCount, formatEta, plural } from '../../../cleanup/format';
 import { computeSummary } from '../summary';
@@ -65,6 +65,8 @@ function progressView(ctx: WizardCtx): HTMLElement {
 
 function resultsView(ctx: WizardCtx, summary: SavedSummary, restored: boolean): HTMLElement {
   const sorted = cards(summary);
+  // Biggest win: the card with the most to free; fall back to step order.
+  const best = sorted.find((c) => c.bytes > 0)?.step ?? 'saver';
   const when = new Date(summary.scannedAt).toLocaleString();
   return h(
     'div',
@@ -89,7 +91,7 @@ function resultsView(ctx: WizardCtx, summary: SavedSummary, restored: boolean): 
       'div',
       { class: 'wz-nav' },
       h('button', { class: 'wz-btn wz-btn-ghost', onclick: () => void ctx.startScan() }, restored ? 'Scan my library' : 'Scan again'),
-      restored ? null : h('button', { class: 'wz-btn wz-btn-primary', onclick: () => ctx.go('saver') }, 'Start with the biggest win')
+      restored ? null : h('button', { class: 'wz-btn wz-btn-primary', onclick: () => ctx.go(best) }, 'Start with the biggest win')
     )
   );
 }
@@ -111,6 +113,7 @@ export default function scanStep(ctx: WizardCtx): HTMLElement {
   const live = computeSummary(state);
   if (live) {
     body.appendChild(stepTitle('Here is what we found', `Pick a card, or go step by step. ${plural(live.videos.count + live.screenshots.count + live.blurry.count, 'item')} are ready to review.`));
+    body.appendChild(sharedNotice(ctx));
     body.appendChild(resultsView(ctx, live, false));
     return body;
   }
