@@ -250,17 +250,17 @@ Source of truth: `Prospera/Admin/Creative/BrandGuide Rev1.pdf`. Logo files are a
 
 ## 8. QA checklist
 
-- [x] Advanced view: Library + Space/Type/Size filter returns results (read-only check). New Album not run, to avoid changing the test account.
+- [x] Advanced view: Library + Space/Type/Size filter returns results (read-only check). New Album skipped by owner decision (album code unchanged; albums can't be deleted via the API).
 - [x] View choice persists across reloads.
 - [x] Scan: Stop mid-way leaves the UI usable. Re-scan works.
 - [x] Not-owned, shared-album, favorite, and non-space-consuming items never appear in grids (by default). Unit-tested; live: 11 wizard videos vs 14 in Advanced.
-- [ ] Trash confirm shows the correct count/GB (verified). Actual trashing not run on the test account: do one small run on the real account.
-- [ ] Freed counter matches the sum of trashed `size` (code path shared with the confirm totals; verify on the real run).
+- [x] Trash confirm shows the correct count/GB. Live run: 1 screenshot (990 KB) moved to Trash through the wizard, appeared in Google Photos Trash (18 to 19), then restored (back to 18, back in library).
+- [x] Freed counter matches the sum of trashed `size` (990 KB shown in flash, storage bar and Done screen).
 - [x] Duplicates: Keep item is never trashed (last kept photo can't be flipped). Groups look right on burst sequences. 3,619 candidates in ~40 s.
-- [ ] Trash step totals update after emptying the trash and pressing Re-check (Re-check verified; emptying not done).
+- [x] Trash step totals update on Re-check after the Trash count drops (verified with a restore; Empty trash itself is permanent and was not run).
 - [x] No console errors from the wizard. The tab stays responsive during the scan.
 - [x] No em dashes or purple in copy/CSS.
-- [x] Prospera logo is crisp at 200px wide (light wizard, dark Advanced). OS dark mode of the wizard not visually checked.
+- [x] Prospera logo is crisp at 200px wide in light and dark (dark tokens verified visually), never stretched. Footer link opens prosperahq.io.
 - [x] Montserrat loads on photos.google.com, scoped to `#gptk`.
 - [x] The built `.user.js` has the logos and the `@icon` inlined as data URIs.
 
@@ -281,5 +281,5 @@ Deviations from the plan, found while testing against a real library:
 - **Shared-album check:** accounts can have hundreds of tiny shared links, so they are fetched 8 at a time with "X of Y" progress.
 - **Trash call:** the wizard calls `api.moveItemsToTrash` per chunk itself (same RPC as `apiUtils.moveToTrash`) so it knows exactly which items succeeded for the freed counter.
 - **Wizard styles** live in `src/ui/markup/wizard.css` (loaded with `style.css`) rather than inside `style.css`.
-- **Look-alikes** fetch 16px thumbs only for photos that share a 10-minute bucket (capped at 150 per bucket).
+- **Look-alikes** fetch 16px thumbs (48 at a time) only for photos that share a 10-minute bucket (capped at 150 per bucket). Measured: 3,600 cold thumbs in 12.9 s and about 5.5 s of hashing per 3,600, so about 3.5 min for 40k photos.
 - **Repo:** `jph112233/Google-Photos-Cleanup` (private). `origin` is the public fork; the private repo is the `private` remote.

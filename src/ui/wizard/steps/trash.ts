@@ -68,8 +68,8 @@ export function trashStep(ctx: WizardCtx): HTMLElement {
       h(
         'div',
         { class: 'wz-card' },
-        rich('p', `Your Trash has **${plural(trash.count, 'item')}${trashSizeText(trash, state.freedCount)}** that still count against your storage.`, 'wz-big-text'),
-        state.freedCount ? rich('p', `That includes the ${plural(state.freedCount, 'item')} you just picked.`, 'wz-muted') : null,
+        rich('p', `Your Trash has **${plural(trash.count, 'item')}${trashSizeText(trash, state.trashCheck.emptiedCount ? 0 : state.freedCount)}** that still count against your storage.`, 'wz-big-text'),
+        state.freedCount && !state.trashCheck.emptiedCount ? rich('p', `That includes the ${plural(state.freedCount, 'item')} you just picked.`, 'wz-muted') : null,
         rich('p', "Emptying it is permanent, so take one last look. This toolkit can't empty it for you: open Trash, then click **Empty trash** in the top right.", 'wz-warning'),
         h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-primary wz-btn-lg', onclick: () => openInNewTab(TRASH_URL) }, 'Open Trash ↗'))
       )
@@ -108,9 +108,9 @@ export function doneStep(ctx: WizardCtx): HTMLElement {
       : h('h2', { class: 'wz-done-title' }, emptiedCount > 0 ? 'Trash emptied!' : 'All done!')
   );
   const lines: HTMLElement[] = [];
-  if (state.freedCount) lines.push(rich('p', `${plural(state.freedCount, 'item')} moved to Trash. You can get them back for 60 days.`));
-  if (emptied > 0) lines.push(rich('p', `You also emptied **${formatBytes(emptied)}** from Trash. That space is yours again.`));
-  else if (emptiedCount > 0) lines.push(rich('p', `You also emptied **${plural(emptiedCount, 'item')}** from Trash. That space is yours again.`));
+  if (state.freedCount) lines.push(rich('p', `${plural(state.freedCount, 'item')} moved to Trash. You can get ${state.freedCount === 1 ? 'it' : 'them'} back for 60 days.`));
+  if (emptied > 0) lines.push(rich('p', `Your Trash is **${formatBytes(emptied)}** smaller than before. If you emptied it, that space is yours again.`));
+  else if (emptiedCount > 0) lines.push(rich('p', `Your Trash has **${plural(emptiedCount, 'item')}** fewer than before. If you emptied it, that space is yours again.`));
   else if (state.freedCount) lines.push(rich('p', 'The space comes back once Trash is emptied (or after 60 days).', 'wz-muted'));
   if (!state.freedCount && !emptied && !emptiedCount) lines.push(h('p', null, 'Nothing removed this time, and that is fine. Come back any time.'));
   body.append(...lines);

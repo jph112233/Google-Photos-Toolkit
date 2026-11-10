@@ -171,7 +171,7 @@ class Wizard implements WizardCtx {
     const t = totals(items);
     const ok = await confirmDialog({
       title: 'Move to Trash?',
-      body: `Move ${plural(t.count, noun.replace(/s$/, ''), noun)} (${formatBytes(t.bytes)}) to Trash? You can restore them from Trash for 60 days.`,
+      body: `Move ${plural(t.count, noun.replace(/s$/, ''), noun)} (${formatBytes(t.bytes)}) to Trash? You can restore ${t.count === 1 ? 'it' : 'them'} from Trash for 60 days.`,
       confirmLabel: 'Move to Trash',
       danger: true,
     });
