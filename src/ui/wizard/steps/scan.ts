@@ -29,7 +29,7 @@ function cards(summary: SavedSummary): ResultCard[] {
       step: 'trash',
       title: 'Trash',
       value: summary.trash.bytes > 0 ? formatBytes(summary.trash.bytes) : summary.trash.count ? plural(summary.trash.count, 'item') : 'Empty',
-      detail: summary.trash.count ? `${plural(summary.trash.count, 'item')} still counting` : 'Nothing waiting',
+      detail: summary.trash.count ? `${plural(summary.trash.count, 'item')} waiting to be cleared` : 'Nothing waiting',
       bytes: summary.trash.bytes,
     },
   ];
@@ -130,7 +130,7 @@ export default function scanStep(ctx: WizardCtx): HTMLElement {
         { class: 'wz-list' },
         h('li', null, 'We look for big videos, screenshots, and look-alike photos.'),
         h('li', null, 'You pick what goes. Nothing is deleted without you saying so.'),
-        rich('li', 'Anything you remove sits in **Trash for 60 days**, so you can get it back.')
+        rich('li', 'Anything you remove sits in **Trash for 30 days**, so you can get it back.')
       ),
       h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-primary wz-btn-lg', onclick: () => void ctx.startScan() }, 'Scan my library'))
     )

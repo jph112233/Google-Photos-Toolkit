@@ -51,7 +51,7 @@ async function recheck(ctx: WizardCtx): Promise<void> {
 export function trashStep(ctx: WizardCtx): HTMLElement {
   const { state } = ctx;
   const trash = state.scan?.trash ?? state.summary?.trash;
-  const body = h('div', { class: 'wz-step' }, flash(ctx), stepTitle('Empty the trash', 'Things in Trash **still count** against your storage for 60 days.'));
+  const body = h('div', { class: 'wz-step' }, flash(ctx), stepTitle('Check the trash', "Items in Trash **don't count** against your storage. Google deletes them for good after 30 days, so emptying it now is optional."));
   if (state.error) body.appendChild(h('div', { class: 'wz-note wz-note-error' }, state.error));
 
   if (!trash) {
@@ -63,9 +63,9 @@ export function trashStep(ctx: WizardCtx): HTMLElement {
       h(
         'div',
         { class: 'wz-card' },
-        rich('p', `Your Trash has **${plural(trash.count, 'item')}${trashSizeText(trash, state.trashCheck.emptiedCount ? 0 : state.freedCount)}** that still count against your storage.`, 'wz-big-text'),
+        rich('p', `Your Trash has **${plural(trash.count, 'item')}${trashSizeText(trash, state.trashCheck.emptiedCount ? 0 : state.freedCount)}**.`, 'wz-big-text'),
         (() => { const line = includesPickedText(state.freedCount, state.trashCheck.emptiedCount); return line ? rich('p', line, 'wz-muted') : null; })(),
-        rich('p', "Emptying it is permanent, so take one last look. This toolkit can't empty it for you: open Trash, then click **Empty trash** in the top right.", 'wz-warning'),
+        rich('p', "Want to clear it now? Emptying is permanent, so take one last look first. This toolkit can't empty it for you: open Trash, then click **Empty trash** in the top right.", 'wz-warning'),
         h('div', { class: 'wz-row-center' }, h('button', { class: 'wz-btn wz-btn-primary wz-btn-lg', onclick: () => openInNewTab(TRASH_URL) }, 'Open Trash ↗'))
       )
     );

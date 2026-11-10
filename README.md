@@ -11,9 +11,9 @@ When you open the toolkit (the Prospera icon in the Google Photos toolbar), a st
 3. **Big videos** - owned, space-consuming videos over 50 MB, biggest first.
 4. **Screenshots and app saves** - screenshots plus Snapchat, WhatsApp and other app saves.
 5. **Look-alikes** - near-duplicate bursts and selfies, compared only within 10-minute windows. The best shot in each group is kept.
-6. **Empty trash** - shows what is still in Trash and links to Google's Trash page.
+6. **Trash** - shows what is in Trash and links to Google's Trash page. Google says items in Trash don't count against storage and are deleted after 30 days, so emptying is optional.
 
-Safety rules: the only change the wizard can make is **Move to Trash** (restorable for 60 days), always after a confirm showing the count and size. Items you don't own, items that don't use storage, favorites and items in shared albums are never offered unless you tick the matching "Include" box.
+Safety rules: the only change the wizard can make is **Move to Trash** (restorable for 30 days), always after a confirm showing the count and size. Items you don't own, items that don't use storage, favorites and items in shared albums are never offered unless you tick the matching "Include" box.
 
 The full original UI is one click away behind **Advanced** (the choice is remembered). Its "Advanced Settings" panel is now called **API Tuning**.
 

@@ -25,17 +25,17 @@ describe('Done screen wording', () => {
   it('trash then restore/empty of one item (the live run)', () => {
     expect(doneTitle(990 * KB, 1)).toBe('You freed 990 KB');
     expect(doneLines(1, 990 * KB, 1)).toEqual([
-      '1 item moved to Trash. You can get it back for 60 days.',
-      'Your Trash is **990 KB** smaller than before. If you emptied it, that space is yours again.',
+      '1 item moved to Trash. You can get it back for 30 days.',
+      'Your Trash is **990 KB** smaller than before.',
     ]);
   });
   it('plural wording', () => {
-    expect(doneLines(3, 0, 0)[0]).toBe('3 items moved to Trash. You can get them back for 60 days.');
-    expect(doneLines(3, 0, 0)[1]).toBe('The space comes back once Trash is emptied (or after 60 days).');
+    expect(doneLines(3, 0, 0)[0]).toBe('3 items moved to Trash. You can get them back for 30 days.');
+    expect(doneLines(3, 0, 0)[1]).toBe("Items in Trash don't count against your storage, so that space is already yours.");
   });
   it('emptied pre-existing Trash of unknown size', () => {
     expect(doneTitle(0, 18)).toBe('Trash emptied!');
-    expect(doneLines(0, 0, 18)).toEqual(['Your Trash has **18 items** fewer than before. If you emptied it, that space is yours again.']);
+    expect(doneLines(0, 0, 18)).toEqual(['Your Trash has **18 items** fewer than before.']);
   });
   it('nothing done', () => {
     expect(doneTitle(0, 0)).toBe('All done!');

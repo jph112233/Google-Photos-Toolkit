@@ -185,6 +185,6 @@ export default function dupesStep(ctx: WizardCtx): HTMLElement {
     body.appendChild(h('div', { class: 'wz-row-end' }, h('button', { class: 'wz-link', onclick: () => { state.dupes = null; void runAnalysis(ctx); } }, 'Check again')));
     body.appendChild(groupsView(ctx));
   }
-  body.appendChild(nav(ctx, { back: 'screenshots', next: 'trash', nextLabel: 'Next: Empty trash' }));
+  body.appendChild(nav(ctx, { back: 'screenshots', next: 'trash', nextLabel: 'Next: Trash' }));
   return body;
 }

@@ -12,7 +12,7 @@ export const STEPS: Array<{ id: StepId; label: string }> = [
   { id: 'videos', label: 'Big videos' },
   { id: 'screenshots', label: 'Screenshots' },
   { id: 'dupes', label: 'Look-alikes' },
-  { id: 'trash', label: 'Empty trash' },
+  { id: 'trash', label: 'Trash' },
 ];
 
 export interface SavedSummary {

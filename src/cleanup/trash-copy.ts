@@ -16,10 +16,10 @@ export function includesPickedText(freedCount: number, emptiedCount: number): st
 /** Done-screen lines describing what happened. */
 export function doneLines(freedCount: number, emptiedBytes: number, emptiedCount: number): string[] {
   const lines: string[] = [];
-  if (freedCount) lines.push(`${plural(freedCount, 'item')} moved to Trash. You can get ${freedCount === 1 ? 'it' : 'them'} back for 60 days.`);
-  if (emptiedBytes > 0) lines.push(`Your Trash is **${formatBytes(emptiedBytes)}** smaller than before. If you emptied it, that space is yours again.`);
-  else if (emptiedCount > 0) lines.push(`Your Trash has **${plural(emptiedCount, 'item')}** fewer than before. If you emptied it, that space is yours again.`);
-  else if (freedCount) lines.push('The space comes back once Trash is emptied (or after 60 days).');
+  if (freedCount) lines.push(`${plural(freedCount, 'item')} moved to Trash. You can get ${freedCount === 1 ? 'it' : 'them'} back for 30 days.`);
+  if (emptiedBytes > 0) lines.push(`Your Trash is **${formatBytes(emptiedBytes)}** smaller than before.`);
+  else if (emptiedCount > 0) lines.push(`Your Trash has **${plural(emptiedCount, 'item')}** fewer than before.`);
+  else if (freedCount) lines.push("Items in Trash don't count against your storage, so that space is already yours.");
   if (!freedCount && !emptiedBytes && !emptiedCount) lines.push('Nothing removed this time, and that is fine. Come back any time.');
   return lines;
 }
