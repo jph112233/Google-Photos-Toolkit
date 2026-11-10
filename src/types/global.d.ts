@@ -6,6 +6,10 @@ declare const unsafeWindow: Window & typeof globalThis & {
 };
 
 declare function GM_registerMenuCommand(caption: string, commandFunc: () => void): void;
+declare function GM_getValue<T = unknown>(key: string, defaultValue?: T): T;
+declare function GM_setValue(key: string, value: unknown): void;
+declare function GM_deleteValue(key: string): void;
+declare const GM_info: { scriptHandler?: string; version?: string; script?: { version?: string } };
 
 declare const __VERSION__: string;
 declare const __HOMEPAGE__: string;

@@ -25,12 +25,20 @@ Notes:
 
 ## How To Install
 
-This repo is private, so Tampermonkey cannot auto-update from it.
+Family and friends: open the setup page at https://www.prosperahq.io/photos-cleanup/ in desktop Chrome. It checks what is installed, walks through Tampermonkey and the "Allow User Scripts" switch, installs the script, then opens Google Photos with the wizard already open. Installs auto-update from that site.
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/) in Chrome or Edge.
+Building that page: give `docs/SETUP-PAGE-BUILD-PROMPT.md` to an LLM. The script side of the page contract lives in `src/setup-bridge.ts`.
+
+Manual install:
+
+1. Install [Tampermonkey](https://www.tampermonkey.net/) in Chrome or Edge, and turn on "Allow User Scripts" in its extension details (Chrome 138+).
 2. `pnpm install && pnpm build`
 3. Drag `google_photos_toolkit.user.js` onto the Tampermonkey dashboard and accept.
 4. If the upstream "Google Photos Toolkit" script is installed too, disable it.
+
+Publishing a release to the setup page: `pnpm build && pnpm export:site`, then copy `dist-site/gptk.user.js` and `dist-site/gptk.meta.js` to the site's `/photos-cleanup/` folder.
+
+Opening `https://photos.google.com/#gptk-open` opens the wizard directly.
 
 ## Development
 
