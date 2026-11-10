@@ -1,4 +1,4 @@
-// Writes the two files the setup page serves at /photos-cleanup/:
+// Writes the two files the setup page serves at /GooglePhotos/:
 //   gptk.user.js  - the full userscript (install + downloadURL)
 //   gptk.meta.js  - header block only (Tampermonkey update checks via updateURL,
 //                   and the setup page reads @version from it)

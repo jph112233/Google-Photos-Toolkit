@@ -6,7 +6,7 @@
 
 ## Role and goal
 
-You are building one private web page at **`https://www.prosperahq.io/photos-cleanup/`**. A non-technical family member (often a teenager) lands on it from a link Paul texts them. The page must take them from "nothing installed" to **the Free Up Space wizard open inside Google Photos** with as few clicks and as little reading as possible. The page checks what is already done, skips those steps, and verifies each step for real instead of trusting a checkbox.
+You are building one private web page at **`https://prosperahq.io/GooglePhotos/`**. A non-technical family member (often a teenager) lands on it from a link Paul texts them. The page must take them from "nothing installed" to **the Free Up Space wizard open inside Google Photos** with as few clicks and as little reading as possible. The page checks what is already done, skips those steps, and verifies each step for real instead of trusting a checkbox.
 
 The thing being installed is a Tampermonkey userscript ("Google Photos Toolkit - Cleanup") that adds a cleanup wizard to photos.google.com. A web page cannot install browser extensions itself, so the page's job is to (1) detect, (2) give exactly one obvious next action, (3) confirm it worked automatically, and (4) launch the wizard.
 
@@ -15,10 +15,10 @@ The thing being installed is a Tampermonkey userscript ("Google Photos Toolkit -
 - **Desktop Google Chrome only.** Other browsers and phones get a friendly "use Chrome on a computer" screen (details below).
 - **Framework-neutral.** Build it as a self-contained static page: one `index.html` with inline CSS and vanilla JS, no build step and no external JS libraries. If the site's stack needs it, wrap that same markup in the stack's page format, but keep the logic plain JS.
 - **Served files.** The same folder must serve, as static files copied from the toolkit repo's `dist-site/` output:
-  - `/photos-cleanup/gptk.user.js` (the userscript, ~380 KB)
-  - `/photos-cleanup/gptk.meta.js` (header only, ~8 KB)
+  - `/GooglePhotos/gptk.user.js` (the userscript, ~380 KB)
+  - `/GooglePhotos/gptk.meta.js` (header only, ~8 KB)
   Serve both with `Content-Type: text/javascript; charset=utf-8` and `Cache-Control: no-cache`. Do not minify, rename or rewrite them. Tampermonkey intercepts URLs ending in `.user.js`, so the file name must stay exactly `gptk.user.js`.
-- **Private.** Add `<meta name="robots" content="noindex,nofollow">`, no links to this page from site navigation or the sitemap, and a `Disallow: /photos-cleanup/` line in robots.txt.
+- **Private.** Add `<meta name="robots" content="noindex,nofollow">`, no links to this page from site navigation or the sitemap, and a `Disallow: /GooglePhotos/` line in robots.txt.
 - **Passcode gate** (see "Screen 0"). It only stops casual visitors. The script file itself stays reachable, and that is acceptable.
 - **Writing style:** no em dashes anywhere (use a hyphen). Short sentences, at most ~12 words per instruction line, second person, friendly, no jargon ("add-on" is fine, but never "userscript", "manifest" or "API").
 - **No purple** anywhere in the palette.
@@ -45,7 +45,7 @@ Match the wizard the user is about to see:
 
 ## The integration contract (already implemented in the userscript)
 
-The userscript also runs on `https://www.prosperahq.io/photos-cleanup*` (plus `prosperahq.io`, `localhost` and `127.0.0.1` under the same path, for testing). On this page it does not start the toolkit. It only talks to the page through DOM events on `document` and `data-*` attributes on `<html>`. The page and the script run in separate JS worlds, so use only these channels. There is no shared `window` variable.
+The userscript also runs on `https://www.prosperahq.io/GooglePhotos*` (plus `prosperahq.io`, `localhost` and `127.0.0.1` under the same path, for testing). On this page it does not start the toolkit. It only talks to the page through DOM events on `document` and `data-*` attributes on `<html>`. The page and the script run in separate JS worlds, so use only these channels. There is no shared `window` variable.
 
 | Direction | Signal | Meaning |
 |---|---|---|
@@ -149,7 +149,7 @@ At the bottom: a **"Text Paul"** button (`sms:{{HELP_PHONE}}?&body=...`) and an 
 
 ## Acceptance tests (the builder runs these and reports results)
 
-Test locally by serving the folder at `http://localhost:<port>/photos-cleanup/`. The script matches localhost on that path.
+Test locally by serving the folder at `http://localhost:<port>/GooglePhotos/`. The script matches localhost on that path.
 
 1. Fresh Chrome profile, no Tampermonkey: passcode, then Screen 2. After adding TM, enabling user scripts and installing, Screen 4 detects the script within 3 s of returning and advances to Screen 5.
 2. TM installed but Allow User Scripts off: Screen 4 never detects, and the troubleshooter opens 20 s after returning, with item 3 highlighted.
@@ -176,5 +176,5 @@ Test locally by serving the folder at `http://localhost:<port>/photos-cleanup/`.
 
 1. In the toolkit repo, bump `version` in `package.json` (e.g. `4.0.0-cleanup.3`).
 2. `pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm export:site`
-3. Copy `dist-site/gptk.user.js` and `dist-site/gptk.meta.js` into the site's `/photos-cleanup/` folder and deploy.
+3. Copy `dist-site/gptk.user.js` and `dist-site/gptk.meta.js` into the site's `/GooglePhotos/` folder and deploy.
 4. Every family install auto-updates within Tampermonkey's update interval (daily by default). The setup page shows "Update available" right away.

@@ -1,6 +1,6 @@
 // Setup-page bridge.
 //
-// The userscript also runs on the family setup page (www.prosperahq.io/photos-cleanup).
+// The userscript also runs on the family setup page (prosperahq.io/GooglePhotos).
 // There it does NOT start the toolkit. It only:
 //   1. Announces itself: sets data-gptk-version / data-gptk-handler on <html>
 //      and fires a `gptk-installed` event on document. It re-announces when the

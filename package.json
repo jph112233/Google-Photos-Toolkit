@@ -1,16 +1,16 @@
 {
   "name": "google-photos-toolkit",
   "nameFull": "Google Photos Toolkit - Cleanup",
-  "version": "4.0.0-cleanup.2",
+  "version": "4.0.0-cleanup.3",
   "description": "Free Up Space wizard plus bulk organize tools for Google Photos",
   "userScript": {
     "namespace": "https://github.com/jph112233/Google-Photos-Cleanup",
     "match": [
       "*://photos.google.com/*",
-      "https://prosperahq.io/photos-cleanup*",
-      "https://www.prosperahq.io/photos-cleanup*",
-      "http://localhost/photos-cleanup*",
-      "http://127.0.0.1/photos-cleanup*"
+      "https://prosperahq.io/GooglePhotos*",
+      "https://www.prosperahq.io/GooglePhotos*",
+      "http://localhost/GooglePhotos*",
+      "http://127.0.0.1/GooglePhotos*"
     ],
     "icon": "media/brand/prospera-mark.png",
     "run-at": "body",
@@ -22,8 +22,8 @@
       "unsafeWindow"
     ],
     "noframes": "",
-    "updateURL": "https://www.prosperahq.io/photos-cleanup/gptk.meta.js",
-    "downloadURL": "https://www.prosperahq.io/photos-cleanup/gptk.user.js"
+    "updateURL": "https://prosperahq.io/GooglePhotos/gptk.meta.js",
+    "downloadURL": "https://prosperahq.io/GooglePhotos/gptk.user.js"
   },
   "main": "google_photos_toolkit.user.js",
   "packageManager": "pnpm@10.30.0",
