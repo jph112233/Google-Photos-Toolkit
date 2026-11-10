@@ -3,6 +3,7 @@ import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from '.
 import { previewGrid } from '../preview-grid';
 import { blurryPhotos, totals } from '../../../cleanup/categories';
 import { formatBytes, plural } from '../../../cleanup/format';
+import { whenFilter } from '../../../cleanup/grid-filters';
 import type { WizardCtx } from '../state';
 
 export default function blurryStep(ctx: WizardCtx): HTMLElement {
@@ -27,6 +28,7 @@ export default function blurryStep(ctx: WizardCtx): HTMLElement {
       step: 'blurry',
       items,
       noun: ['photo', 'photos'],
+      filters: [whenFilter(items)],
       emptyText: 'No blurry photos found.',
     })
   );

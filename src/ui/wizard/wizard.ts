@@ -95,7 +95,7 @@ class Wizard implements WizardCtx {
   gridPrefs(step: StepId, defaults: Partial<GridPrefs> = {}): GridPrefs {
     let prefs = this.state.grid[step];
     if (!prefs) {
-      prefs = { keep: new Set(), chips: new Set(), sort: 'size', ...defaults };
+      prefs = { keep: new Set(), chips: new Set(), sort: 'size', filters: {}, ...defaults };
       this.state.grid[step] = prefs;
     }
     return prefs;

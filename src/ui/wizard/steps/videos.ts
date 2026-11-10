@@ -1,7 +1,8 @@
 import { h } from '../dom';
 import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from './common';
 import { previewGrid } from '../preview-grid';
-import { bigVideos, isScreenRecording, isLongVideo, totals } from '../../../cleanup/categories';
+import { bigVideos, isScreenRecording, totals } from '../../../cleanup/categories';
+import { BIG_VIDEO_SIZES, is4K, lengthFilter, sizeFilter, whenFilter } from '../../../cleanup/grid-filters';
 import { formatBytes, plural } from '../../../cleanup/format';
 import type { WizardCtx } from '../state';
 
@@ -30,8 +31,9 @@ export default function videosStep(ctx: WizardCtx): HTMLElement {
       chipMode: 'all',
       chips: [
         { id: 'screenrec', label: 'Screen recordings', match: isScreenRecording },
-        { id: 'long', label: 'Longer than 1 min', match: isLongVideo },
-      ],
+        { id: '4k', label: '4K', match: is4K },
+      ].filter((chip) => items.some(chip.match)),
+      filters: [whenFilter(items), lengthFilter(), sizeFilter(BIG_VIDEO_SIZES)],
       emptyText: 'No videos over 50 MB. Nice!',
     })
   );

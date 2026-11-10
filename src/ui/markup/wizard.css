@@ -750,6 +750,29 @@
     width: auto;
 }
 
+#gptk #gptk-wizard .wz-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#gptk #gptk-wizard select.wz-select.is-on {
+    border-color: var(--wz-green);
+    color: var(--wz-green);
+    font-weight: 600;
+}
+
+#gptk #gptk-wizard .wz-showing {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--wz-text);
+    background: var(--wz-ghost-hover);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 4px 0 10px;
+}
+
 #gptk #gptk-wizard .wz-hint {
     font-size: 13px;
     color: var(--wz-muted);

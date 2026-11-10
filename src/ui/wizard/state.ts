@@ -28,12 +28,16 @@ export interface SavedSummary {
   freedBytes: number;
 }
 
+export type GridSort = 'size' | 'date' | 'oldest';
+
 export interface GridPrefs {
   /** Items she un-picked (to keep). Everything else visible is selected. */
   keep: Set<string>;
   /** Active chip ids. */
   chips: Set<string>;
-  sort: 'size' | 'date';
+  sort: GridSort;
+  /** Chosen option per dropdown filter id (missing = any). */
+  filters: Record<string, string>;
 }
 
 export interface WizardState {

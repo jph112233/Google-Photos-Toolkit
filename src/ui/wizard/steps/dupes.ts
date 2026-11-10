@@ -2,7 +2,9 @@ import { h, clear } from '../dom';
 import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from './common';
 import { createTile, setTileMode, selectionFooter } from '../preview-grid';
 import { totals } from '../../../cleanup/categories';
-import { defaultTrashKeys, newCursor, streamDuplicateGroups } from '../../../cleanup/duplicates';
+import { defaultTrashKeys, newCursor, streamDuplicateGroups, type DuplicateGroup } from '../../../cleanup/duplicates';
+import { applyFilters, whenFilter } from '../../../cleanup/grid-filters';
+import { filterSelects, showingLine, sortSelect } from '../filter-bar';
 import { formatBytes, formatCount, plural } from '../../../cleanup/format';
 import type { WizardCtx } from '../state';
 import type { MediaItem } from '../../../types';
@@ -56,19 +58,40 @@ async function runAnalysis(ctx: WizardCtx): Promise<void> {
 function groupsView(ctx: WizardCtx): HTMLElement {
   const dupes = ctx.state.dupes;
   if (!dupes) return h('div');
-  const { groups, trashKeys } = dupes;
+  const { groups } = dupes;
   if (!groups.length) {
     return h('div', { class: 'wz-empty' }, h('div', { class: 'wz-empty-icon' }, '✨'), h('p', null, 'No look-alike photos found.'));
   }
 
-  const selectedItems = (): MediaItem[] => groups.flatMap((g) => g.items.filter((i) => trashKeys.has(i.mediaKey)));
+  const trashKeys = (): Set<string> => dupes.trashKeys;
+  const prefs = ctx.gridPrefs('dupes', { sort: 'date' });
+  const leads = groups.map((g) => g.items[0]);
+  const filters = [whenFilter(leads)];
+  const BIG_GROUP = 3;
+  const groupBytes = (g: DuplicateGroup): number => totals(g.items).bytes;
+  const visibleGroups = (): DuplicateGroup[] => {
+    let list = applyFilters(groups, filters, prefs.filters, (g) => g.items[0]);
+    if (prefs.chips.has('big')) list = list.filter((g) => g.items.length >= BIG_GROUP);
+    if (prefs.sort === 'size') return [...list].sort((a, b) => groupBytes(b) - groupBytes(a));
+    if (prefs.sort === 'oldest') return [...list].sort((a, b) => a.items[0].timestamp - b.items[0].timestamp);
+    return [...list].sort((a, b) => b.items[0].timestamp - a.items[0].timestamp);
+  };
+  let shown: DuplicateGroup[] = [];
+  const selectedItems = (): MediaItem[] => shown.flatMap((g) => g.items.filter((i) => trashKeys().has(i.mediaKey)));
+  const showing = showingLine(() => {
+    prefs.filters = {};
+    prefs.chips.clear();
+    ctx.render();
+  });
   const footer = selectionFooter(() => {
     void ctx.trash(selectedItems(), 'photos');
   });
   const updateFooter = (): void => {
     const sel = selectedItems();
-    const groupCount = groups.filter((g) => g.items.some((i) => trashKeys.has(i.mediaKey))).length;
+    const groupCount = shown.filter((g) => g.items.some((i) => trashKeys().has(i.mediaKey))).length;
     footer.update(`Selected: **${plural(sel.length, 'photo')} in ${plural(groupCount, 'group')}, ${formatBytes(totals(sel).bytes)}**`, sel.length > 0 && ctx.state.scan?.sharedChecked === true);
+    const filtered = shown.length < groups.length;
+    showing.update(shown.length, groups.length, 'groups', filtered);
   };
 
   const list = h('div', { class: 'wz-groups' });
@@ -76,25 +99,25 @@ function groupsView(ctx: WizardCtx): HTMLElement {
   let rendered = 0;
 
   const renderGroup = (index: number): HTMLElement => {
-    const group = groups[index];
+    const group = shown[index];
     const row = h('div', { class: 'wz-group-row' });
     const hint = h('span', { class: 'wz-group-hint' });
     const tiles = new Map<string, HTMLElement>();
-    const modeOf = (item: MediaItem): 'trash' | 'keeper' => (trashKeys.has(item.mediaKey) ? 'trash' : 'keeper');
+    const modeOf = (item: MediaItem): 'trash' | 'keeper' => (trashKeys().has(item.mediaKey) ? 'trash' : 'keeper');
     for (const item of group.items) {
       const tile = createTile(item, modeOf(item), () => {
-        if (trashKeys.has(item.mediaKey)) {
-          trashKeys.delete(item.mediaKey);
+        if (trashKeys().has(item.mediaKey)) {
+          trashKeys().delete(item.mediaKey);
         } else {
           // Never let every photo in a group go: one always stays.
-          const keptCount = group.items.filter((i) => !trashKeys.has(i.mediaKey)).length;
+          const keptCount = group.items.filter((i) => !trashKeys().has(i.mediaKey)).length;
           if (keptCount <= 1) {
             hint.textContent = 'Keep at least one photo from each group.';
             tile.classList.add('wz-shake');
             setTimeout(() => tile.classList.remove('wz-shake'), 400);
             return;
           }
-          trashKeys.add(item.mediaKey);
+          trashKeys().add(item.mediaKey);
         }
         hint.textContent = '';
         for (const i of group.items) {
@@ -111,15 +134,22 @@ function groupsView(ctx: WizardCtx): HTMLElement {
   };
 
   const renderMore = (): void => {
-    const end = Math.min(groups.length, rendered + GROUPS_PER_PAGE);
+    const end = Math.min(shown.length, rendered + GROUPS_PER_PAGE);
     for (let i = rendered; i < end; i++) list.appendChild(renderGroup(i));
     rendered = end;
-    sentinel.style.display = rendered < groups.length ? '' : 'none';
+    sentinel.style.display = rendered < shown.length ? '' : 'none';
+  };
+  const rebuild = (): void => {
+    shown = visibleGroups();
+    clear(list);
+    rendered = 0;
+    renderMore();
+    updateFooter();
   };
 
   if (typeof IntersectionObserver !== 'undefined') {
     new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting) && rendered < groups.length) renderMore();
+      if (entries.some((e) => e.isIntersecting) && rendered < shown.length) renderMore();
     }, { rootMargin: '600px 0px' }).observe(sentinel);
   } else {
     sentinel.appendChild(h('button', { class: 'wz-btn wz-btn-ghost', onclick: renderMore }, 'Show more'));
@@ -128,27 +158,43 @@ function groupsView(ctx: WizardCtx): HTMLElement {
   const resetBtn = h('button', {
     class: 'wz-btn wz-btn-small',
     onclick: () => {
-      dupes.trashKeys = defaultTrashKeys(groups);
-      ctx.render();
+      // Only the groups on screen; picks in filtered-out groups stay as they are.
+      for (const g of shown) for (const i of g.items) trashKeys().delete(i.mediaKey);
+      for (const key of defaultTrashKeys(shown)) trashKeys().add(key);
+      rebuild();
     },
   }, 'Reset picks');
   const keepAllBtn = h('button', {
     class: 'wz-btn wz-btn-small',
     onclick: () => {
-      trashKeys.clear();
-      clear(list);
-      rendered = 0;
-      renderMore();
-      updateFooter();
+      for (const g of shown) for (const i of g.items) trashKeys().delete(i.mediaKey);
+      rebuild();
     },
   }, 'Keep all');
 
-  renderMore();
-  updateFooter();
+  const bigChip = groups.some((g) => g.items.length >= BIG_GROUP) && groups.some((g) => g.items.length < BIG_GROUP)
+    ? h('button', {
+      class: `wz-chip${prefs.chips.has('big') ? ' is-on' : ''}`,
+      'aria-pressed': String(prefs.chips.has('big')),
+      onclick: () => {
+        if (prefs.chips.has('big')) prefs.chips.delete('big');
+        else prefs.chips.add('big');
+        bigChip?.classList.toggle('is-on', prefs.chips.has('big'));
+        bigChip?.setAttribute('aria-pressed', String(prefs.chips.has('big')));
+        rebuild();
+      },
+    }, `${BIG_GROUP}+ photos (${formatCount(groups.filter((g) => g.items.length >= BIG_GROUP).length)})`)
+    : null;
+  const dropdowns = filterSelects(leads, filters, prefs, rebuild);
+  const sorter = sortSelect(prefs, { date: 'Newest first', oldest: 'Oldest first', size: 'Most space' }, rebuild);
+
+  rebuild();
   return h(
     'div',
     { class: 'wz-grid-wrap' },
-    h('div', { class: 'wz-toolbar' }, h('p', { class: 'wz-hint' }, 'The best shot in each group has a green ring and stays. Tap to flip Keep or Trash.'), h('div', { class: 'wz-toolbar-right' }, resetBtn, keepAllBtn)),
+    h('div', { class: 'wz-toolbar' }, h('div', { class: 'wz-filters' }, ...dropdowns, bigChip), h('div', { class: 'wz-toolbar-right' }, resetBtn, keepAllBtn, sorter)),
+    h('p', { class: 'wz-hint' }, 'The best shot in each group has a green ring and stays. Tap to flip Keep or Trash.'),
+    showing.el,
     list,
     sentinel,
     footer.el

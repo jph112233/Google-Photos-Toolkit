@@ -52,6 +52,10 @@ export function sortByDateDesc(items: MediaItem[]): MediaItem[] {
   return [...items].sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
 }
 
+export function sortByDateAsc(items: MediaItem[]): MediaItem[] {
+  return [...items].sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+}
+
 // ─── Step 2: Big videos ─────────────────────────────────────────────
 
 export const SCREEN_RECORDING_RE = /RPReplay|ScreenRecord|Screen_Recording|screen-?record/i;

@@ -2,7 +2,9 @@
 // select-all-by-default, live footer total, Move to Trash.
 import { h, clear, openInNewTab } from './dom';
 import { formatBytes, formatDuration, plural } from '../../cleanup/format';
-import { bytesOf, isVideo, sortByDateDesc, sortBySizeDesc, totals } from '../../cleanup/categories';
+import { bytesOf, isVideo, sortByDateAsc, sortByDateDesc, sortBySizeDesc, totals } from '../../cleanup/categories';
+import { applyFilters, type GridFilter } from '../../cleanup/grid-filters';
+import { filterSelects, showingLine, sortSelect } from './filter-bar';
 import type { MediaItem } from '../../types';
 import type { StepId, WizardCtx, GridPrefs } from './state';
 
@@ -132,11 +134,13 @@ export interface GridOptions {
    *  'all': active chips narrow the list (optional filters, off by default). */
   chipMode?: 'any' | 'all';
   defaultChips?: string[];
+  /** Dropdown filters (When, Size, Length...). Only useful ones are shown. */
+  filters?: GridFilter[];
   emptyText: string;
 }
 
 export function previewGrid(opts: GridOptions): HTMLElement {
-  const { ctx, step, items, chips = [], chipMode = 'all' } = opts;
+  const { ctx, step, items, chips = [], chipMode = 'all', filters = [] } = opts;
   const prefs: GridPrefs = ctx.gridPrefs(step, { chips: new Set(opts.defaultChips ?? []) });
 
   if (!items.length) {
@@ -150,8 +154,21 @@ export function previewGrid(opts: GridOptions): HTMLElement {
       if (chipMode === 'any') list = list.filter((i) => active.some((c) => c.match(i)));
       else if (active.length) list = list.filter((i) => active.every((c) => c.match(i)));
     }
-    return prefs.sort === 'date' ? sortByDateDesc(list) : sortBySizeDesc(list);
+    list = applyFilters(list, filters, prefs.filters, (i) => i);
+    if (prefs.sort === 'date') return sortByDateDesc(list);
+    if (prefs.sort === 'oldest') return sortByDateAsc(list);
+    return sortBySizeDesc(list);
   };
+  const defaultChips = new Set(opts.defaultChips ?? []);
+  const isFiltered = (): boolean =>
+    Object.values(prefs.filters).some((v) => v && v !== 'all') ||
+    prefs.chips.size !== defaultChips.size ||
+    [...prefs.chips].some((c) => !defaultChips.has(c));
+  const showing = showingLine(() => {
+    prefs.filters = {};
+    prefs.chips = new Set(defaultChips);
+    ctx.render();
+  });
   const selected = (): MediaItem[] => visible().filter((i) => !prefs.keep.has(i.mediaKey));
 
   const gridEl = h('div', { class: 'wz-grid' });
@@ -167,7 +184,8 @@ export function previewGrid(opts: GridOptions): HTMLElement {
   const updateFooter = (): void => {
     const sel = selected();
     const t = totals(sel);
-    footer.update(`Selected: **${plural(t.count, opts.noun[0], opts.noun[1])}, ${formatBytes(t.bytes)}**  of ${plural(list.length, opts.noun[0], opts.noun[1])}`, t.count > 0 && ctx.state.scan?.sharedChecked === true);
+    footer.update(`Selected: **${plural(t.count, opts.noun[0], opts.noun[1])}, ${formatBytes(t.bytes)}**  of ${plural(list.length, opts.noun[0], opts.noun[1])}${list.length < items.length ? ' shown' : ''}`, t.count > 0 && ctx.state.scan?.sharedChecked === true);
+    showing.update(list.length, items.length, opts.noun[1], isFiltered());
   };
 
   const renderMore = (): void => {
@@ -235,29 +253,23 @@ export function previewGrid(opts: GridOptions): HTMLElement {
     )
     : null;
 
-  const sortSelect = h('select', {
-    class: 'wz-select',
-    'aria-label': 'Sort',
-    onchange: (e: Event) => {
-      prefs.sort = (e.target as HTMLSelectElement).value === 'date' ? 'date' : 'size';
-      rebuild();
-    },
-  }, h('option', { value: 'size', selected: prefs.sort === 'size' }, 'Biggest first'), h('option', { value: 'date', selected: prefs.sort === 'date' }, 'Newest first'));
+  const sorter = sortSelect(prefs, { size: 'Biggest first', date: 'Newest first', oldest: 'Oldest first' }, rebuild);
+  const dropdowns = filterSelects(items, filters, prefs, rebuild);
 
   const toolbar = h(
     'div',
     { class: 'wz-toolbar' },
-    chipRow,
+    chipRow || dropdowns.length ? h('div', { class: 'wz-filters' }, ...dropdowns, chipRow) : null,
     h(
       'div',
       { class: 'wz-toolbar-right' },
       h('button', { class: 'wz-btn wz-btn-small', onclick: () => setAll(false) }, 'Select all'),
       h('button', { class: 'wz-btn wz-btn-small', onclick: () => setAll(true) }, 'Select none'),
-      sortSelect
+      sorter
     )
   );
 
-  const wrap = h('div', { class: 'wz-grid-wrap' }, toolbar, h('p', { class: 'wz-hint' }, 'Ticked items go to Trash. Tap any you want to keep. ↗ opens it in Google Photos.'), gridEl, sentinel, footer.el);
+  const wrap = h('div', { class: 'wz-grid-wrap' }, toolbar, h('p', { class: 'wz-hint' }, 'Ticked items go to Trash. Tap any you want to keep. ↗ opens it in Google Photos.'), showing.el, gridEl, sentinel, footer.el);
   rebuild();
   return wrap;
 }

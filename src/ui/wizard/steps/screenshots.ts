@@ -3,6 +3,7 @@ import { stepTitle, nav, needsScan, flash, optionToggles, sharedNotice } from '.
 import { previewGrid } from '../preview-grid';
 import { screenshots, screenshotKind, SCREENSHOT_KINDS, totals } from '../../../cleanup/categories';
 import { formatBytes, plural } from '../../../cleanup/format';
+import { typeFilter, whenFilter } from '../../../cleanup/grid-filters';
 import type { WizardCtx } from '../state';
 
 export default function screenshotsStep(ctx: WizardCtx): HTMLElement {
@@ -36,9 +37,10 @@ export default function screenshotsStep(ctx: WizardCtx): HTMLElement {
       chipMode: 'any',
       defaultChips: SCREENSHOT_KINDS.map((k) => k.id),
       chips: SCREENSHOT_KINDS.map((k) => ({ id: k.id, label: k.label, match: (item) => screenshotKind(item, sources) === k.id })),
+      filters: [whenFilter(items), typeFilter()],
       emptyText: 'No screenshots or app saves found.',
     })
   );
-  body.appendChild(nav(ctx, { back: 'videos', next: 'dupes', nextLabel: 'Next: Blurry photos' }));
+  body.appendChild(nav(ctx, { back: 'videos', next: 'blurry', nextLabel: 'Next: Blurry photos' }));
   return body;
 }
