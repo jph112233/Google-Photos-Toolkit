@@ -6,12 +6,13 @@ A private fork of [xob0t/Google-Photos-Toolkit](https://github.com/xob0t/Google-
 
 When you open the toolkit (the Prospera icon in the Google Photos toolbar), a step-by-step wizard opens:
 
-1. **Scan** - one read-only pass over the library (sizes, screenshots, shared albums, Trash). Nothing changes.
+1. **Quick scan** - reads Google's own server-side "Manage storage" lists (Large photos & videos, Screenshots, Other apps, Blurry) instead of walking the whole library, so it takes seconds even for very large libraries. Nothing changes. The shared-album check finishes in the background; Move to Trash unlocks when it's done.
 2. **Storage saver** - information only: how much Original-quality media there is and a link to Google's setting. The wizard never converts anything.
 3. **Big videos** - owned, space-consuming videos over 50 MB, biggest first.
-4. **Screenshots and app saves** - screenshots plus Snapchat, WhatsApp and other app saves.
-5. **Look-alikes** - near-duplicate bursts and selfies, compared only within 10-minute windows. The best shot in each group is kept.
-6. **Trash** - shows what is in Trash and links to Google's Trash page. Google says items in Trash don't count against storage and are deleted after 30 days, so emptying is optional.
+4. **Screenshots and app saves** - Google's Screenshots and Other apps lists, plus Snapchat, WhatsApp and other app saves.
+5. **Blurry photos** - Google's Blurry list.
+6. **Look-alikes** - streams through the timeline newest first, comparing only photos taken within 10 minutes of each other. Groups appear as they're found; stop any time and **Keep looking** later. The best shot in each group is kept.
+7. **Trash** - shows what is in Trash and links to Google's Trash page. Google says items in Trash don't count against storage and are deleted after 30 days, so emptying is optional.
 
 Safety rules: the only change the wizard can make is **Move to Trash** (restorable for 30 days), always after a confirm showing the count and size. Items you don't own, items that don't use storage, favorites and items in shared albums are never offered unless you tick the matching "Include" box.
 

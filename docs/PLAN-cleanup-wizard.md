@@ -285,3 +285,27 @@ Deviations from the plan, found while testing against a real library:
 - **Repo:** `jph112233/Google-Photos-Cleanup` (private). `origin` is the public fork; the private repo is the `private` remote.
 - **Trash does not count against storage:** Google's own Empty trash dialog says "Items in trash don't count towards your Google Account storage", and the Trash page says items are deleted after 30 days (not 60). The plan's step 5 premise was wrong, so the step is now "Check the trash" (emptying is optional) and all copy says 30 days.
 - **40k timing:** no 40k library was available. Measured worst case on the test account: all 16,203 photos (cold 16px thumb fetch at 48 concurrent, decode and downscale) in 74.6 s, about 217 photos/s; the wizard's hash and grouping step runs at about 650 photos/s. A 40k library where every photo is a candidate projects to about 4 min, under the 5 min target. Real libraries only hash photos that share a 10-minute bucket, so they are faster. Owner accepted this in place of a 40k run.
+
+## 11. Large-library redesign (2026-11-10)
+
+Goal: work on a 400 GB library (likely 100k+ items) without a scan that takes ages or never finishes.
+
+**What the old first scan cost** (measured on a 23 GB, 16,942-item library): listing the whole library took 20 s as 41 sequential pages, sizes about 8 s, and the shared-album check about 21 s (204 links). Listing grows linearly with library size, so a 100k-item library would spend minutes before showing anything.
+
+**Quick wins first.** Google's own "Manage storage" page (photos.google.com/quotamanagement) has server-computed review lists, served by rpc `omQMf` with payload `[null, null, category]` (next page: `[null, null, category, null, null, token]`, token at response index 2). Items use the library item shape, and field `318563170` carries `[takesUpSpace, bytes, quality]`, so sizes come with the list.
+
+| Category | Id | On the test library |
+|---|---|---|
+| Large photos & videos (roughly biggest first) | 1 | 2,089 items, 15.5 GB of 23 GB, 5 pages in 2.2 s, all 14 videos over 50 MB |
+| Blurry photos | 2 | 440 items |
+| Other apps | 4 | 23 items |
+| Screenshots | 5 | 127 items |
+
+**New pipeline:**
+1. **Quick scan** (`src/cleanup/scan.ts`): quota, then the four Google lists plus the "screenshots" search in parallel, then batch info only for those items (file names), then the Trash count. Cost grows with the number of quick wins, not with library size. Measured: **4.2 s** end to end (the old full scan took about 2 min) and it found the same 11 big videos (981 MB).
+2. **Shared-album check** runs in the background after the quick scan. Results show immediately; Move to Trash stays locked, with a progress notice, until it finishes (about 20 s here). It doesn't use `isProcessRunning`, so the person can browse meanwhile.
+3. **Look-alikes stream** through the timeline newest first, one page at a time, with the next page prefetched. Only photos taken within 10 minutes of another photo get batch info and thumbnails; the oldest run of each page carries over to the next. Groups appear as they are found, Stop keeps them, and **Keep looking** resumes from a saved cursor. Measured: the whole 16,942-photo library in 25-30 s, with the first groups within seconds; stop then resume gives exactly the same groups as one uninterrupted run (254 groups, 318 photos).
+4. **New Blurry photos step**, from Google's list.
+5. **Storage saver** now reads the quality flag on the Large list, so its numbers are a floor ("at least"): those items hold most of the bytes.
+
+**Projected for her 400 GB library:** quick scan about 15-30 s (scales with the Large list, about 0.45 s per 500 items); look-alikes about 0.15-0.2 s per 100 photos, so about 3 min per 100k photos, with results usable from the first few seconds and resumable at any point.
