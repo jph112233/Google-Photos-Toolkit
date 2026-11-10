@@ -123,14 +123,14 @@ export async function findDuplicateGroups(
   onProgress({ done, total, groups: 0 });
 
   // Process several buckets per round so thumbnail fetches run in parallel.
-  const ROUND_ITEMS = 200;
+  const ROUND_ITEMS = 600;
   let round: MediaItem[][] = [];
   let roundSize = 0;
 
   const flush = async (): Promise<void> => {
     if (!round.length) return;
     const flat = round.flat();
-    const withBlobs = await fetchImageBlobs(flat, 24, THUMB_HEIGHT, core);
+    const withBlobs = await fetchImageBlobs(flat, 48, THUMB_HEIGHT, core);
     const blobByKey = new Map(withBlobs.map((i) => [i.mediaKey, i.blob]));
     for (const bucket of round) {
       if (!core.isProcessRunning) return;
